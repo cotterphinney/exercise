@@ -27,13 +27,13 @@ class MusicCollection
 
 		case keyword
 		when 'add'
-			album, artist = parse_album_and_artist(command_array)
+			album, artist = parse_album_info(command_array)
 			add_album(album, artist)
 		when 'show'
-			params, artist = parse_show_command_parameters(command_array), parse_artist(command_array)
+			params, artist = parse_show_command_parameters(command_array), parse_album_info(command_array)
 			show(params, artist)
 		when 'play'
-			album = parse_album(command_array)
+			album = parse_album_info(command_array)
 			play_album(album)
 		when 'quit'
 			quit()
@@ -45,26 +45,26 @@ class MusicCollection
 		commands = command_array.select { |word| keywords.include? word }
 	end
 
+	def parse_album_info(album_info)
+		parsed_album_and_artist = album_info.join(' ').scan(/"[^"]*"/)
+		if parsed_album_and_artist.length > 2
+			puts "Whoops... you put more than two things in quotes"
+			return false
+		end
+
+		parsed_album_and_artist.map! {|a| a.tr('"', '')}
+		album, artist = parsed_album_and_artist
+
+		if artist
+			return album, artist
+		else
+			return album
+		end
+	end
+
 	def quit
 		puts 'Bye!'
 		@user_has_quit = true
-	end
-
-	def parse_artist(command_array)
-		artist = command_array.join(' ').scan(/"[^"]*"/)
-		artist.empty? ? false : artist.first.tr('"', '')
-	end
-
-	def parse_album(command_array)
-		album = command_array.join(' ').scan(/"[^"]*"/).first.tr('"', '')
-	end
-
-	def parse_album_and_artist(album_and_artist)
-		parsed_album_and_artist = album_and_artist.join(' ').scan(/"[^"]*"/)
-		return false if parsed_album_and_artist.length != 2
-
-		album, artist = parsed_album_and_artist
-		return album.tr('"', ''), artist.tr('"', '')
 	end
 
 	def add_album(album, artist)
