@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'pry'
-
 class MusicCollection
 	def initialize
 		puts "Welcome to your music collection!"
