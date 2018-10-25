@@ -55,11 +55,8 @@ class MusicCollection
 		parsed_album_and_artist.map! {|a| a.tr('"', '')}
 		album, artist = parsed_album_and_artist
 
-		if artist
-			return album, artist
-		else
-			return album
-		end
+		return album, artist if artist
+		return album
 	end
 
 	def quit
