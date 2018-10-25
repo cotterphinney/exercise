@@ -1,0 +1,135 @@
+#!/usr/bin/env ruby
+
+require 'pry'
+
+class MusicCollection
+	def initialize
+		puts "Welcome to your music collection!"
+		@albums = []
+		@user_has_quit = false
+	end
+
+	def main
+		while !@user_has_quit
+			print '> '
+			command = gets.chomp
+			process_command(command)
+		end
+	end
+
+	private
+
+	def process_command(command)
+		return if command == ""
+
+		command_array = command.split(' ')
+		keyword = command_array.shift.downcase
+
+		case keyword
+		when 'add'
+			album, artist = parse_album_and_artist(command_array)
+			add_album(album, artist)
+		when 'show'
+			params, artist = parse_show_command_parameters(command_array), parse_artist(command_array)
+			show(params, artist)
+		when 'play'
+			album = parse_album(command_array)
+			play_album(album)
+		when 'quit'
+			quit()
+		end
+	end
+
+	def parse_show_command_parameters(command_array)
+		keywords = ['all', 'unplayed', 'by']
+		commands = command_array.select { |word| keywords.include? word }
+	end
+
+	def quit
+		puts 'Bye!'
+		@user_has_quit = true
+	end
+
+	def parse_artist(command_array)
+		artist = command_array.join(' ').scan(/"[^"]*"/)
+		artist.empty? ? false : artist.first.tr('"', '')
+	end
+
+	def parse_album(command_array)
+		album = command_array.join(' ').scan(/"[^"]*"/).first.tr('"', '')
+	end
+
+	def parse_album_and_artist(album_and_artist)
+		parsed_album_and_artist = album_and_artist.join(' ').scan(/"[^"]*"/)
+		return false if parsed_album_and_artist.length != 2
+
+		album, artist = parsed_album_and_artist
+		return album.tr('"', ''), artist.tr('"', '')
+	end
+
+	def add_album(album, artist)
+		if !album || !artist
+			puts "Oops! Looks like you entered your artist or album incorrectly."
+			return false
+		end
+		album = Album.new(artist, album)
+		@albums << album
+		puts "Added \"#{album.name}\" by #{artist}"
+	end
+
+	def play_album(album_name)
+		album = @albums.select { |album| album.name == album_name }.first
+		if album
+			album.play
+			puts "You're listening to \"#{album.name}\""
+		else
+			puts "Whoops... couldn't find any album by that name."
+			return false
+		end
+	end
+
+	def show(params, artist=false)
+		show_play_state = false
+		if @albums.empty?
+			puts "No albums added yet!"
+		elsif params == ["all", "by"]
+			albums = @albums.select { |album| album.artist == artist }
+			show_play_state = true
+		elsif params == ["unplayed", "by"]
+			albums = @albums.select { |album| album.artist == artist && !album.was_played }
+		elsif params == ["unplayed"]
+			albums = @albums.select { |album| !album.was_played }
+		elsif params == ["all"]
+			albums = @albums
+			show_play_state = true
+		end
+
+		albums.each do |album|
+			if show_play_state
+				puts "\"#{album.name}\" by #{album.artist} (#{album.play_state})"
+			else
+				puts "\"#{album.name}\" by #{album.artist}"
+			end
+		end
+	end
+end
+
+class Album
+	attr_reader :artist, :name, :was_played
+	def initialize(artist, name)
+		@artist = artist
+		@name = name
+		@was_played = false
+	end
+
+	def play
+		@was_played = true
+	end
+
+	def play_state
+		@was_played ? 'played' : 'unplayed'
+	end
+end
+
+m = MusicCollection.new
+m.main
