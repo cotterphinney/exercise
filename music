@@ -9,7 +9,7 @@ class MusicCollection
 		@user_has_quit = false
 	end
 
-	def main
+	def start
 		while !@user_has_quit
 			print '> '
 			command = gets.chomp
@@ -59,6 +59,10 @@ class MusicCollection
 		return album
 	end
 
+	def find_album(album_name)
+		@albums.select { |album| album.name == album_name }.first
+	end
+
 	def quit
 		puts 'Bye!'
 		@user_has_quit = true
@@ -68,14 +72,18 @@ class MusicCollection
 		if !album || !artist
 			puts "Oops! Looks like you entered your artist or album incorrectly."
 			return false
+		elsif find_album(album)
+			puts "You've already added an album called \"#{album}!\""
+			return false
 		end
+
 		album = Album.new(artist, album)
 		@albums << album
 		puts "Added \"#{album.name}\" by #{artist}"
 	end
 
 	def play_album(album_name)
-		album = @albums.select { |album| album.name == album_name }.first
+		album = find_album(album_name)
 		if album
 			album.play
 			puts "You're listening to \"#{album.name}\""
@@ -87,8 +95,10 @@ class MusicCollection
 
 	def show(params, artist=false)
 		show_play_state = false
+
 		if @albums.empty?
 			puts "No albums added yet!"
+			return
 		elsif params == ["all", "by"]
 			albums = @albums.select { |album| album.artist == artist }
 			show_play_state = true
@@ -129,4 +139,4 @@ class Album
 end
 
 m = MusicCollection.new
-m.main
+m.start
